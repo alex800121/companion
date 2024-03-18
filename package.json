@@ -2,6 +2,7 @@
   "name": "@companion-app/workspace",
   "version": "3.3.0",
   "packageManager": "yarn@4.1.0",
+  "private": "true",
   "workspaces": [
     "companion",
     "shared-lib",
