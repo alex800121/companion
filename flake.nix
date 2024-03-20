@@ -3,22 +3,24 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
-    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
   };
 
-  outputs = inputs@{ self, nixpkgs, nix-npm-buildpackage, ... }:
+  outputs = inputs@{ self, nixpkgs, ... }:
     let
       pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
-      bp = pkgs.callPackage nix-npm-buildpackage {};
       system = "x86_64-linux";
       src = pkgs.fetchFromGitHub {
         owner = "bitfocus";
         repo = "companion";
         rev = "7417d2a075ec1e798fb0b638c5a7776045e1bd50";
-        hash = "sha256-nzoTNLlom6ji3fTn1Zm2QwAE0b1aVpJuQpCi0t/f0+c=";
+        hash = "sha256-veqXm++gXzLmRkMPiPEMsjpLc4qcsKSu3RrN+qyK6Eo=";
       };
-      node-modules = pkgs.yarn2nix-moretea.mkYarnWorkspace {
-        src = ./.;
+      node-modules = pkgs.mkYarnModules {
+        pname = "module-legacy";
+        version = "main";
+        packageJSON = "${src}/module-legacy/package.json";
+        yarnLock = "${src}/module-legacy/yarn.lock";
+        yarnNix = ./module-legacy/yarn.nix;
       };
       lindist = pkgs.mkYarnPackage {
         name = "companion";
@@ -37,9 +39,6 @@
           python3
         ];
       };
-      test = bp.buildYarnPackage {
-        src = "${src}/module-legacy";
-      };
       fhs = pkgs.buildFHSEnv {
         name = "fhs-shell";
         targetPkgs = p: with p; [
@@ -54,7 +53,7 @@
           curl
           systemd
           nodejs_18
-          yarn
+          yarn-berry
           fontconfig
           alsa-lib
           zx
@@ -71,7 +70,6 @@
       packages."${system}" = {
         default = lindist;
         node-modules = node-modules;
-        test = test;
       };
     };
 }
