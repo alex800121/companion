@@ -18,7 +18,7 @@
         hash = "sha256-nzoTNLlom6ji3fTn1Zm2QwAE0b1aVpJuQpCi0t/f0+c=";
       };
       node-modules = pkgs.yarn2nix-moretea.mkYarnWorkspace {
-        inherit src;
+        src = ./.;
       };
       lindist = pkgs.mkYarnPackage {
         name = "companion";
