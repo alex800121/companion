@@ -3,20 +3,48 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
   };
 
-  outputs = inputs@{ self, nixpkgs, ... }:
+  outputs = inputs@{ self, nixpkgs, nix-npm-buildpackage, ... }:
     let
       pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+      bp = pkgs.callPackage nix-npm-buildpackage {};
       system = "x86_64-linux";
+      src = pkgs.fetchFromGitHub {
+        owner = "bitfocus";
+        repo = "companion";
+        rev = "7417d2a075ec1e798fb0b638c5a7776045e1bd50";
+        hash = "sha256-nzoTNLlom6ji3fTn1Zm2QwAE0b1aVpJuQpCi0t/f0+c=";
+      };
+      node-modules = pkgs.yarn2nix-moretea.mkYarnWorkspace {
+        inherit src;
+      };
+      lindist = pkgs.mkYarnPackage {
+        name = "companion";
+        version = "main";
+        inherit src;
+        yarnNix = ./yarn.nix;
+        yarnLock = ./yarn.lock;
+        buildInputs = with pkgs; [
+          nodejs_18
+          yarn
+          alsa-lib
+          zx
+          vite
+          nodePackages.rimraf
+          typescript
+          python3
+        ];
+      };
+      test = bp.buildYarnPackage {
+        src = "${src}/module-legacy";
+      };
       fhs = pkgs.buildFHSEnv {
         name = "fhs-shell";
         targetPkgs = p: with p; [
-          dbus
-          gtkd
-          # gtk2
-          nspr
-          nss
+          yarn2nix
+          python3
           pkg-config
           gnome2.GConf
           libusb1
@@ -31,38 +59,19 @@
           alsa-lib
           zx
           vite
-          libsForQt5.full
-          gobject-introspection
-          glib
-          glibc
           nodePackages.rimraf
           typescript
         ];
-        profile = ''
-          export QT_QPA_PLATFORM_PLUGIN_PATH=“${pkgs.qt5.qtbase.bin}/lib/qt-${pkgs.qt5.qtbase.version}/plugins”
-        '';
       };
     in
     {
       devShells."${system}" = {
         default = fhs.env;
-        test = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          pkg-config
-          gnome2.GConf
-          libusb1
-          zip
-          unzip
-          git
-          curl
-          systemd
-          nodejs_18
-          yarn
-          fontconfig
-          alsa-lib
-        ];
-        };
-
+      };
+      packages."${system}" = {
+        default = lindist;
+        node-modules = node-modules;
+        test = test;
       };
     };
 }
