@@ -9,6 +9,7 @@
     let
       pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
       system = "x86_64-linux";
+      yarn = pkgs.yarn-berry;
       src = pkgs.fetchFromGitHub {
         owner = "bitfocus";
         repo = "companion";
@@ -21,11 +22,13 @@
         packageJSON = "${src}/module-legacy/package.json";
         yarnLock = "${src}/module-legacy/yarn.lock";
         yarnNix = ./module-legacy/yarn.nix;
+        inherit yarn;
       };
       lindist = pkgs.mkYarnPackage {
         name = "companion";
         version = "main";
         inherit src;
+        inherit yarn;
         yarnNix = ./yarn.nix;
         yarnLock = ./yarn.lock;
         buildInputs = with pkgs; [
