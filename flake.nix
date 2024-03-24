@@ -55,6 +55,7 @@
         nativeBuildInputs = with pkgs; [
           git
           zx
+          vite
         ];
         buildInputs = with pkgs; [
           nodejs_18
@@ -90,6 +91,7 @@
         nativeBuildInputs = with pkgs; [
           git
           zx
+          vite
         ];
         buildInputs = with pkgs; [
           nodejs_18
@@ -106,6 +108,7 @@
           chmod +w node_modules
           rm node_modules/respawn
           ln -s ../vendor/respawn node_modules/respawn
+          export QT_QPA_PLATFORM_PLUGIN_PATH="${pkgs.libsForQt5.qt5.qtbase.bin}/lib/qt-${pkgs.libsForQt5.qt5.qtbase.version}/plugins/platforms"
         '';
         buildPhase = ''
           ${pkgs.yarn}/bin/yarn --offline lindist
