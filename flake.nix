@@ -23,7 +23,7 @@
         pkgs.mkYarnModules {
           pname = "companion";
           version = "v3.2.2";
-          inherit yarnLock ;
+          inherit yarnLock;
           packageJSON = ./package.json;
           yarnNix = pkgs.yarn2nix-moretea.mkYarnNix { inherit yarnLock; };
         };
@@ -45,7 +45,7 @@
           python3
         ];
       };
-      lindist = pkgs.mkYarnPackage {
+      test_build = pkgs.mkYarnPackage {
         name = "companion";
         version = "main";
         inherit src;
@@ -54,6 +54,7 @@
         # ];
         nativeBuildInputs = with pkgs; [
           git
+          zx
         ];
         buildInputs = with pkgs; [
           nodejs_18
@@ -65,13 +66,49 @@
           typescript
           python3
         ];
-        # buildPhase = ''
-        #   cp -r ${src} $PWD
-        #   ln -s ${node_modules-root} node_modules
-        #   ${pkgs.yarn}/bin/yarn lindist --offline
-        # '';
+        configurePhase = ''
+          cp -r $node_modules node_modules
+          chmod +w node_modules
+          rm node_modules/respawn
+          ln -s ../vendor/respawn node_modules/respawn
+        '';
         buildPhase = ''
-          ${pkgs.yarn}/bin/yarn lindist --offline
+        '';
+        installPhase = ''
+          cp -r . $out
+        '';
+        doDist = false;
+
+      };
+      lindist = pkgs.mkYarnPackage {
+        name = "companion";
+        version = "main";
+        inherit src;
+        # nativeBuildInputs = with pkgs; [
+        #
+        # ];
+        nativeBuildInputs = with pkgs; [
+          git
+          zx
+        ];
+        buildInputs = with pkgs; [
+          nodejs_18
+          yarn
+          alsa-lib
+          zx
+          vite
+          nodePackages.rimraf
+          typescript
+          python3
+        ];
+        configurePhase = ''
+          cp -r $node_modules node_modules
+          chmod +w node_modules
+          rm node_modules/respawn
+          ln -s ../vendor/respawn node_modules/respawn
+        '';
+        buildPhase = ''
+          ${pkgs.yarn}/bin/yarn --offline lindist
         '';
         installPhase = ''
           mv dist $out
@@ -107,7 +144,7 @@
       };
       packages."${system}" = {
         inherit node_modules-root src;
-        inherit native_build;
+        inherit native_build test_build;
         default = lindist;
       };
     };
