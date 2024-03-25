@@ -103,12 +103,13 @@
           typescript
           python3
         ];
+        QT_QPA_PLATFORM_PLUGIN_PATH="${pkgs.libsForQt5.qt5.qtbase.bin}/lib/qt-${pkgs.libsForQt5.qt5.qtbase.version}/plugins/platforms";
+        QT_QPA_PLATFORM="wayland";
         configurePhase = ''
           cp -r $node_modules node_modules
           chmod +w node_modules
           rm node_modules/respawn
           ln -s ../vendor/respawn node_modules/respawn
-          export QT_QPA_PLATFORM_PLUGIN_PATH="${pkgs.libsForQt5.qt5.qtbase.bin}/lib/qt-${pkgs.libsForQt5.qt5.qtbase.version}/plugins/platforms"
         '';
         buildPhase = ''
           ${pkgs.yarn}/bin/yarn --offline lindist
